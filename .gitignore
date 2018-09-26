@@ -108,3 +108,7 @@ venv.bak/
 
 # Output from the create-release.sh script
 /release/
+
+# Shape generation directories
+/generate/assets/
+/generate/shapes/
