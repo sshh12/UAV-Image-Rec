@@ -62,7 +62,7 @@ def _download_file(url):
 
 # Untar a file, unless the directory already exists.
 def _untar(filename):
-    dirname = os.path.splitext(filename)[0]
+    dirname = filename.split('.tar.gz')[0]
 
     if not os.path.isdir(dirname):
         asset = os.path.basename(filename)
