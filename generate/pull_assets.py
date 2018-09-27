@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import glob
 import os
 import shutil
 import tarfile
@@ -71,7 +72,27 @@ def _untar(filename):
 
         shutil.unpack_archive(filename, config.ASSETS_DIR)
 
+        # Remove hidden files that might have been left behind by
+        # the untarring.
+        _remove_hidden(dirname)
+
         print(' done.')
+
+
+# Remove files starting with '._' from a directory recursively.
+def _remove_hidden(directory):
+    filenames = glob.glob(os.path.join(directory, '**', '._*'), recursive=True)
+
+    for filename in filenames:
+        os.remove(filename)
+
+    # Also check if the directory itself has a hidden counterpart.
+    asset_type = os.path.basename(directory)
+    other_hidden = os.path.normpath(os.path.join(directory, '..',
+                                                 '._' + asset_type))
+
+    if os.path.isfile(other_hidden):
+        os.remove(other_hidden)
 
 
 if __name__ == '__main__':
