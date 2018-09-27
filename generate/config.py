@@ -23,3 +23,17 @@ BASE_SHAPES_URL = (
 NAS_IMAGES_URL = DOWNLOAD_BASE + 'nas-images-' + NAS_IMAGES_VERSION + '.tar.gz'
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
+
+BACKGROUNDS_DIR = os.path.join(ASSETS_DIR,
+                               'backgrounds-' + BACKGROUNDS_VERSION)
+BASE_SHAPES_DIR = os.path.join(ASSETS_DIR,
+                               'base-shapes-' + BASE_SHAPES_VERSION)
+NAS_IMAGES_DIR = os.path.join(ASSETS_DIR, 'nas-images-' + NAS_IMAGES_VERSION)
+
+# Settings for shape and not-a-shape (nas) generation.
+
+SHAPES_DIR = os.path.join(os.path.dirname(__file__), 'shapes')
+
+NAS_PADDING = 10  # For each side.
+
+NUM_SHAPES = 5000  # Number of each shape.
