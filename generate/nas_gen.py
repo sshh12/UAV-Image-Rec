@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import glob
-import io
 import os
 import sys
 
