@@ -80,12 +80,13 @@ def _get_nas_images(filename):
     # are appropriate after cropping.
     for cnt in contours:
         x, y, width, height = cv2.boundingRect(np.asarray(cnt))
+        padding = 10
 
         # Crop image to interesting shape.
-        x_1 = max(x - config.NAS_PADDING, 0)
-        y_1 = max(y - config.NAS_PADDING, 0)
-        y_2 = min(y + height + config.NAS_PADDING, image_height)
-        x_2 = min(x + width + config.NAS_PADDING, image_width)
+        x_1 = max(x - padding, 0)
+        y_1 = max(y - padding, 0)
+        y_2 = min(y + height + padding, image_height)
+        x_2 = min(x + width + padding, image_width)
 
         blob_image = mask_image[y_1:y_2, x_1:x_2]
 

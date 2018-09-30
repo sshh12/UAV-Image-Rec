@@ -34,8 +34,6 @@ NAS_IMAGES_DIR = os.path.join(ASSETS_DIR, 'nas-images-' + NAS_IMAGES_VERSION)
 
 SHAPES_DIR = os.path.join(os.path.dirname(__file__), 'shapes')
 
-NAS_PADDING = 10  # For each side.
-
 NUM_SHAPES = 5000  # Number of each shape.
 
 ALPHAS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
