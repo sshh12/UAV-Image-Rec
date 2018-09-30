@@ -48,7 +48,7 @@ def _get_nas_assets():
 
         sys.exit(1)
     else:
-        return filenames
+        return sorted(filenames)
 
 
 # Yields images from all files.
