@@ -1,2 +1,6 @@
+opencv-python
+numpy
+Pillow
 progress
 requests
+webcolors

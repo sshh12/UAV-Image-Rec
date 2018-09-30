@@ -37,3 +37,51 @@ SHAPES_DIR = os.path.join(os.path.dirname(__file__), 'shapes')
 NAS_PADDING = 10  # For each side.
 
 NUM_SHAPES = 5000  # Number of each shape.
+
+ALPHAS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+
+ALPHA_FONT_DIR = os.path.join(os.path.dirname(__file__), 'vendor', 'open-sans')
+ALPHA_FONTS = [
+    os.path.join(ALPHA_FONT_DIR, 'OpenSans-SemiBold.ttf'),
+    os.path.join(ALPHA_FONT_DIR, 'OpenSans-Bold.ttf')
+]
+
+# The shapes to generate.
+SHAPE_TYPES = [
+    'circle',
+    'cross',
+    'pentagon',
+    'quarter-circle',
+    'rectangle',
+    'semicircle',
+    'square',
+    'star',
+    'trapezoid',
+    'triangle'
+]
+
+SHAPE_COLORS = [
+    '#407340',
+    '#94ff94',
+    '#00ff00',
+    '#008004',
+    '#525294',
+    '#7f7fff',
+    '#0000ff',
+    '#000087',
+    '#808080',
+    '#994c00',
+    '#e1dd68',
+    '#fffc7a',
+    '#fff700',
+    '#d2cb00',
+    '#d8ac53',
+    '#FFCC65',
+    '#ffa500',
+    '#d28c00',
+    '#bc3c3c',
+    '#ff5050',
+    '#ff0000',
+    '#9a0000',
+    '#800080'
+]
