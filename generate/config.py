@@ -1,6 +1,6 @@
 """Contains configuration settings for generation."""
 
-import os.path
+import os
 
 
 # Settings for pulling assets.
@@ -22,7 +22,8 @@ BASE_SHAPES_URL = (
 )
 NAS_IMAGES_URL = DOWNLOAD_BASE + 'nas-images-' + NAS_IMAGES_VERSION + '.tar.gz'
 
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
+ASSETS_DIR = os.environ.get('ASSETS_DIR',
+                            os.path.join(os.path.dirname(__file__), 'assets'))
 
 BACKGROUNDS_DIR = os.path.join(ASSETS_DIR,
                                'backgrounds-' + BACKGROUNDS_VERSION)
@@ -32,9 +33,11 @@ NAS_IMAGES_DIR = os.path.join(ASSETS_DIR, 'nas-images-' + NAS_IMAGES_VERSION)
 
 # Settings for shape and not-a-shape (nas) generation.
 
-SHAPES_DIR = os.path.join(os.path.dirname(__file__), 'shapes')
+SHAPES_DIR = os.environ.get('SHAPES_DIR',
+                            os.path.join(os.path.dirname(__file__), 'shapes'))
 
-NUM_SHAPES = 5000  # Number of each shape.
+# Number of each shape to make.
+NUM_SHAPES = int(os.environ.get('NUM_SHAPES', '5000'))
 
 ALPHAS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
 
