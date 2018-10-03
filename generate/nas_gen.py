@@ -16,6 +16,19 @@ def generate_nas():
     """Generate not-a-shapes in the shapes directory."""
     os.makedirs(os.path.join(config.SHAPES_DIR, 'nas'), exist_ok=True)
 
+    existing = _get_existing()
+
+    if len(existing) == config.NUM_SHAPES:
+        print('NAS image count already met, skipping generation.')
+        return
+
+    if len(existing) != 0 and len(existing) != config.NUM_SHAPES:
+        print('Clearing out existing NAS images: target shape count not '
+              'exact.')
+
+        for i in existing:
+            _delete_image(i)
+
     num_shapes = 0
     filenames = _get_nas_assets()
 
@@ -49,6 +62,19 @@ def _get_nas_assets():
         sys.exit(1)
     else:
         return sorted(filenames)
+
+
+# Get the NAS image numbers that have already been generated.
+def _get_existing():
+    numbers = []
+
+    for filename in glob.glob(os.path.join(config.SHAPES_DIR, 'nas', '*.jpg')):
+        basename = os.path.basename(filename)
+        name = os.path.splitext(basename)[0]
+
+        numbers.append(int(name.split('-')[-1]))
+
+    return sorted(numbers)
 
 
 # Yields images from all files.
@@ -101,8 +127,17 @@ def _get_nas_images(filename):
 
 # Save an image to the output directory.
 def _save_image(image, number):
-    filename = os.path.join(config.SHAPES_DIR, 'nas', f'nas-{number:06d}.jpg')
+    filename = _format_filename(number)
     cv2.imwrite(filename, image)
+
+
+def _delete_image(number):
+    filename = _format_filename(number)
+    os.remove(filename)
+
+
+def _format_filename(number):
+    return os.path.join(config.SHAPES_DIR, 'nas', f'nas-{number:06d}.jpg')
 
 
 if __name__ == '__main__':

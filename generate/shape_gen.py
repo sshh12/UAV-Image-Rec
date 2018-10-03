@@ -33,6 +33,20 @@ def generate_shapes(shape):
     os.makedirs(os.path.join(config.SHAPES_DIR, shape), exist_ok=True)
     existing = _get_existing(shape)
 
+    if len(existing) > config.NUM_SHAPES:
+        print(f'Clearing out excess {shape.title()} images.')
+
+        for i in existing:
+            if i >= config.NUM_SHAPES:
+                _delete_image(shape, i)
+
+        # Take out the numbers that were removed.
+        existing = list(filter(lambda x: x < config.NUM_SHAPES, existing))
+
+    if len(existing) == config.NUM_SHAPES:
+        print(f'{shape.title()} image count already met, skipping generation.')
+        return
+
     r_state = random.getstate()
 
     # Seed the random number generator with the shape name.
@@ -195,9 +209,17 @@ def _create_shape(shape, base, background, background_color, alpha,
 
 # Save an image to the output directory.
 def _save_image(image, shape, number):
-    filename = os.path.join(config.SHAPES_DIR, shape,
-                            f'{shape}-{number:06d}.jpg')
+    filename = _format_filename(shape, number)
     image.save(filename)
+
+
+def _delete_image(shape, number):
+    filename = _format_filename(shape, number)
+    os.remove(filename)
+
+
+def _format_filename(shape, number):
+    return os.path.join(config.SHAPES_DIR, shape, f'{shape}-{number:06d}.jpg')
 
 
 if __name__ == '__main__':
