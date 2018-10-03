@@ -109,7 +109,7 @@ def _get_existing(shape):
         basename = os.path.basename(filename)
         name = os.path.splitext(basename)[0]
 
-        numbers.append(int(name.split('-')[1]))
+        numbers.append(int(name.split('-')[-1]))
 
     return sorted(numbers)
 
