@@ -89,7 +89,9 @@ SHAPE_COLORS = [
 
 RETRAIN_FILE = os.path.join(os.path.dirname(__file__), 'vendor', 'retrain.py')
 
-BOTTLENECK_DIR = os.path.join(os.path.dirname(__file__), 'bottlenecks')
+BOTTLENECK_DIR = os.environ.get(
+    'BOTTLENECK_DIR', os.path.join(os.path.dirname(__file__), 'bottlenecks')
+)
 
 DATA_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..',
                                          'target_finder_model', 'data'))
