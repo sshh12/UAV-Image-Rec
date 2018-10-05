@@ -86,3 +86,15 @@ SHAPE_COLORS = [
     '#9a0000',
     '#800080'
 ]
+
+RETRAIN_FILE = os.path.join(os.path.dirname(__file__), 'vendor', 'retrain.py')
+
+BOTTLENECK_DIR = os.path.join(os.path.dirname(__file__), 'bottlenecks')
+
+DATA_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..',
+                                         'target_finder_model', 'data'))
+GRAPH_OUTPUT = os.path.join(DATA_DIR, 'graph.pb')
+LABELS_OUTPUT = os.path.join(DATA_DIR, 'labels.txt')
+
+# Amount of training steps for the retraining.
+TRAINING_STEPS = os.environ.get('TRAINING_STEPS', '8000')

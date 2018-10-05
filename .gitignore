@@ -112,3 +112,4 @@ venv.bak/
 # Shape generation directories
 /generate/assets/
 /generate/shapes/
+/generate/bottlenecks/
