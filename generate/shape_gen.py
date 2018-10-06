@@ -137,11 +137,26 @@ def _random_list(items, count=config.NUM_SHAPES):
 def _create_shape(shape, base, background, background_color, alpha,
                   alpha_color, font_file, size, padding, angle, crop,
                   blur_radius):
+    image = _get_base(base, size)
+    image = _add_background_color(image, background_color)
+    image = _add_alphanumeric(image, shape, alpha, alpha_color, font_file)
+    image = _rotate_shape(image, shape, size, angle, crop)
+    image = _add_alpha_channel(image)
+    image = _add_background(image, background, size, padding, blur_radius)
+    image = image.convert('RGB')
+
+    return image
+
+
+def _get_base(base, size):
     # Start with a sized version of the base shape.
     image = base.copy()
     image.resize((size, size), 0)
 
-    # Apply background color to shape.
+    return image
+
+
+def _add_background_color(image, background_color):
     for x in range(image.width):
         for y in range(image.height):
             pixel_color = image.getpixel((x, y))
@@ -152,9 +167,13 @@ def _create_shape(shape, base, background, background_color, alpha,
             else:
                 image.putpixel((x, y), webcolors.hex_to_rgb(background_color))
 
-    # Add on the alphanumeric.
+    return image
+
+
+def _add_alphanumeric(image, shape, alpha, alpha_color, font_file):
     font_multiplier = 0.4 if shape not in ('star', 'triangle') else 0.3
     font_size = int(round(font_multiplier * image.height))
+
     font = ImageFont.truetype(font_file, font_size)
     font_color = webcolors.hex_to_rgb(alpha_color)
 
@@ -167,7 +186,10 @@ def _create_shape(shape, base, background, background_color, alpha,
 
     draw.text((draw_x, draw_y), alpha, font_color, font=font)
 
-    # Rotate the image.
+    return image
+
+
+def _rotate_shape(image, shape, size, angle, crop):
     border = 100
 
     if shape in ('rectangle', 'semicircle', 'trapezoid'):
@@ -179,7 +201,10 @@ def _create_shape(shape, base, background, background_color, alpha,
     image = image.crop((crop, crop, image.width - crop, image.height - crop))
     image = image.resize((size, size), 0)
 
-    # Make the white parts transparent.
+    return image
+
+
+def _add_alpha_channel(image):
     image = image.convert('RGBA')
     image_data = image.getdata()
     new_data = []
@@ -192,6 +217,10 @@ def _create_shape(shape, base, background, background_color, alpha,
 
     image.putdata(new_data)
 
+    return image
+
+
+def _add_background(image, background, size, padding, blur_radius):
     # Rescaling a copy of the background image, and then pasting the
     # current image on top of it and saving the image as that.
     background_size = size + padding
@@ -202,7 +231,6 @@ def _create_shape(shape, base, background, background_color, alpha,
     background.paste(image, (offset_x, offset_y), image)
 
     image = background.filter(ImageFilter.GaussianBlur(blur_radius))
-    image = image.convert('RGB')
 
     return image
 
