@@ -52,18 +52,11 @@ ALPHA_FONTS = [
 ]
 
 # The shapes to generate.
-SHAPE_TYPES = [
-    'circle',
-    'cross',
-    'pentagon',
-    'quarter-circle',
-    'rectangle',
-    'semicircle',
-    'square',
-    'star',
-    'trapezoid',
-    'triangle'
-]
+SHAPE_TYPES = os.environ.get(
+    'SHAPE_TYPES',
+    'circle,cross,pentagon,quarter-circle,rectangle,semicircle,square,star,'
+    'trapezoid,triangle'
+).split(',')
 
 SHAPE_COLORS = [
     '#407340',
