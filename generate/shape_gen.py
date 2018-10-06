@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
+import multiprocessing
 import os
 import random
 import sys
@@ -29,6 +30,10 @@ def generate_shapes(shape):
 
     Shapes generated between runs are always consistent, and runs are
     resumed in the same place if they are stopped midway through.
+
+    Shapes are generated using a thread pool. By default, this will
+    take nearly all processing power. To decrease this, you may set
+    the NUM_THREADS environment variable.
     """
     os.makedirs(os.path.join(config.SHAPES_DIR, shape), exist_ok=True)
     existing = _get_existing(shape)
@@ -55,6 +60,9 @@ def generate_shapes(shape):
     # All the random selection is generated ahead of time, that way
     # the process can be resumed without the shapes changing on each
     # run.
+    numbers = list(range(0, config.NUM_SHAPES))
+    existing_list = [existing for i in numbers]
+    shapes = [shape for i in numbers]
     bases = _random_list(_get_base_shapes(shape))
     backgrounds = _random_list(_get_backgrounds())
     background_colors = _random_list(config.SHAPE_COLORS)
@@ -67,6 +75,12 @@ def generate_shapes(shape):
     crops = _random_list(range(60, 81))
     blur_radii = _random_list(range(1, 7))
 
+    # Put everything into one large iterable so that we can split up
+    # data across thread pools.
+    data = zip(numbers, existing_list, shapes, bases, backgrounds,
+               background_colors, alphas, alpha_colors, font_files, sizes,
+               paddings, angles, crops, blur_radii)
+
     random.setstate(r_state)
 
     num_width = str(len(str(config.NUM_SHAPES)))
@@ -75,22 +89,25 @@ def generate_shapes(shape):
     bar = Bar('{:25s}'.format(shape.title() + ' Generation'),
               max=config.NUM_SHAPES, suffix=bar_suffix)
 
-    for i in range(0, config.NUM_SHAPES):
-        if i in existing:
+    # Generate in a pool. If specificed, use a given number of
+    # threads.
+    with multiprocessing.Pool(config.NUM_THREADS or None) as pool:
+        for i in pool.imap_unordered(_generate_single_shape, data):
             bar.next()
-            continue
-
-        image = _create_shape(
-            shape, bases[i], backgrounds[i], background_colors[i], alphas[i],
-            alpha_colors[i], font_files[i], sizes[i], paddings[i], angles[i],
-            crops[i], blur_radii[i]
-        )
-
-        _save_image(image, shape, i)
-
-        bar.next()
 
     bar.finish()
+
+
+# One iteration in the function above, runs in a pool.
+def _generate_single_shape(args):
+    number = args[0]
+    existing = args[1]
+    shape = args[2]
+    data = args[2:]
+
+    if number not in existing:
+        image = _create_shape(*data)
+        _save_image(image, shape, number)
 
 
 # Get the background assets. This is returned as list of images.

@@ -39,6 +39,10 @@ SHAPES_DIR = os.environ.get('SHAPES_DIR',
 # Number of each shape to make.
 NUM_SHAPES = int(os.environ.get('NUM_SHAPES', '5000'))
 
+# Specify number of threads to use for shape generation. Default lets
+# the multiprocessing library determine.
+NUM_THREADS = int(os.environ.get('NUM_THREADS', 0))
+
 ALPHAS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
 
 ALPHA_FONT_DIR = os.path.join(os.path.dirname(__file__), 'vendor', 'fonts')
