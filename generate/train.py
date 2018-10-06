@@ -29,6 +29,8 @@ def train():
         for line in f:
             print(line.replace(' ', '_').upper(), end='')
 
+    print(f'Model generated and saved in {config.DATA_DIR}')
+
 
 if __name__ == '__main__':
     train()

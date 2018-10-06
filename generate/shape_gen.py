@@ -8,7 +8,7 @@ import sys
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
-from progress.bar import IncrementalBar
+from progress.bar import Bar
 import webcolors
 
 import config
@@ -69,7 +69,11 @@ def generate_shapes(shape):
 
     random.setstate(r_state)
 
-    bar = IncrementalBar(f'{shape.title()} Generation', max=config.NUM_SHAPES)
+    num_width = str(len(str(config.NUM_SHAPES)))
+    bar_suffix = '%(index)' + num_width + 'd/%(max)d [%(elapsed_td)s]'
+
+    bar = Bar('{:25s}'.format(shape.title() + ' Generation'),
+              max=config.NUM_SHAPES, suffix=bar_suffix)
 
     for i in range(0, config.NUM_SHAPES):
         if i in existing:

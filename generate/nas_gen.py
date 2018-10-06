@@ -7,7 +7,7 @@ import sys
 import cv2
 import numpy as np
 from PIL import Image
-from progress.bar import IncrementalBar
+from progress.bar import Bar
 
 import config
 
@@ -32,8 +32,12 @@ def generate_nas():
     num_shapes = 0
     filenames = _get_nas_assets()
 
+    num_width = str(len(str(config.NUM_SHAPES)))
+    bar_suffix = '%(index)' + num_width + 'd/%(max)d [%(elapsed_td)s]'
+
     # Wrap this operation with a nice progress bar.
-    bar = IncrementalBar('NAS Generation', max=config.NUM_SHAPES)
+    bar = Bar('{:25s}'.format('NAS Generation'), max=config.NUM_SHAPES,
+              suffix=bar_suffix)
 
     # Use each file in the nas-images folder to generate blobs.
     for image in _get_all_nas_images(filenames):
