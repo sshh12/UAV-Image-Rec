@@ -1,0 +1,18 @@
+version: 2
+jobs:
+  # Testing job which builds a small model and runs sanity tests
+  # against it.
+  test:
+    docker:
+      - image: circle/python:3.6
+
+    steps:
+      - checkout
+
+      - run:
+          name: install tox
+          command: pip3 install tox
+
+      - run:
+          name: run tests
+          command: tox
