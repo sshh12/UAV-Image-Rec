@@ -92,9 +92,21 @@ jobs:
           at: generate
       - run: pip install --user -r requirements-dev.txt
       - run: python generate/train.py
+      - persist_to_workspace:
+          root: target_finder_model
+          paths:
+            - data/*
+
+  # Job that creates a tar archive for the python library.
+  release:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: target_finder_model
+      - run: ./scripts/create-release.sh
       - store_artifacts:
-          path: target_finder_model/data
-          destination: model
+          path: release/*
 
 workflows:
   version: 2
@@ -137,3 +149,6 @@ workflows:
             - star-gen
             - trapezoid-gen
             - triangle-gen
+      - release:
+          requires:
+            - train
