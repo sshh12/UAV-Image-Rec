@@ -18,12 +18,12 @@ jobs:
             - assets
 
   # Running a job to build not-a-shapes.
-  generate-nas:
+  nas-gen:
     <<: *defaults
     steps:
       - checkout
       - attach_workspace:
-          at: /tmp/workspace
+          at: generate
       - run: pip install --user -r requirements-dev.txt
       - run: python generate/nas_gen.py
       - persist_to_workspace:
@@ -32,24 +32,56 @@ jobs:
             - shapes/nas
 
   # Parallel jobs to build each type of shape.
-  generate-shapes:
+  circle-gen: &shape-job
     <<: *defaults
     environment:
-      - CIRCLE_NODE_TOTAL: 10
-    parallelism: 4
+      - SHAPE_TYPES: circle
     steps:
       - checkout
       - attach_workspace:
-          at: /tmp/workspace
+          at: generate
       - run: pip install --user -r requirements-dev.txt
-      - run: export ALL_SHAPES=(circle cross pentagon quarter-circle rectangle
-                                semicircle square star trapezoid triangle)
-      - run: export SHAPE_TYPES=${ALL_SHAPES[$CIRCLE_NODE_INDEX]}
       - run: python generate/shape_gen.py
       - persist_to_workspace:
           root: generate
           paths:
             - shapes/*
+  cross-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: cross
+  pentagon-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: pentagon
+  quarter-circle-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: quarter-circle
+  rectangle-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: rectangle
+  semicircle-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: semicircle
+  square-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: square
+  star-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: star
+  trapezoid-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: trapezoid
+  triangle-gen:
+    <<: *shape-job
+    environment:
+      - SHAPE_TYPES: triangle
 
   # Training job using the shapes from the shapes above.
   train:
@@ -69,13 +101,39 @@ workflows:
   test-generate-train:
     jobs:
       - test
-      - generate-nas:
+      - nas-gen: &gen-job
           requires:
             - test
-      - generate-shapes:
-          requires:
-            - test
+      - circle-gen:
+          <<: *gen-job
+      - cross-gen:
+          <<: *gen-job
+      - pentagon-gen:
+          <<: *gen-job
+      - quarter-circle-gen:
+          <<: *gen-job
+      - rectangle-gen:
+          <<: *gen-job
+      - semicircle-gen:
+          <<: *gen-job
+      - square-gen:
+          <<: *gen-job
+      - star-gen:
+          <<: *gen-job
+      - trapezoid-gen:
+          <<: *gen-job
+      - triangle-gen:
+          <<: *gen-job
       - train:
           requires:
-            - generate-nas
-            - generate-shapes
+            - nas-gen
+            - circle-gen
+            - cross-gen
+            - pentagon-gen
+            - quarter-circle-gen
+            - rectangle-gen
+            - semicircle-gen
+            - square-gen
+            - star-gen
+            - trapezoid-gen
+            - triangle-gen
