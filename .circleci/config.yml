@@ -1,18 +1,81 @@
+defaults: &defaults
+  docker:
+    - image: circleci/python:3.6
+
 version: 2
 jobs:
   # Testing job which builds a small model and runs sanity tests
   # against it.
   test:
-    docker:
-      - image: circle/python:3.6
-
+    <<: *defaults
     steps:
       - checkout
+      - run: pip install --user tox
+      - run: python -m tox
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - generate/assets
 
-      - run:
-          name: install tox
-          command: pip3 install tox
+  # Running a job to build not-a-shapes.
+  generate-nas:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: pip install -r requirements-dev.txt
+      - run: python generate/nas_gen.py
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - generate/shapes/nas
 
-      - run:
-          name: run tests
-          command: tox
+  # Parallel jobs to build each type of shape.
+  generate-shapes:
+    <<: *defaults
+    environment:
+      - CIRCLE_NODE_TOTAL: 10
+    parallelism: 4
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: pip install -r requirements-dev.txt
+      - run: export ALL_SHAPES=(circle cross pentagon quarter-circle rectangle
+                                semicircle square star trapezoid triangle)
+      - run: export SHAPE_TYPES=${ALL_SHAPES[$CIRCLE_NODE_INDEX]}
+      - run: python generate/shape_gen.py
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - generate/shapes/*
+
+  # Training job using the shapes from the shapes above.
+  train:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: pip install -r requirements-dev.txt
+      - run: python generate/train.py
+      - store_artifacts:
+          path: target_finder_model/data
+          destination: model
+
+workflows:
+  version: 2
+  test-generate-train:
+    jobs:
+      - test
+      - generate-nas:
+          requires:
+            - test
+      - generate-shapes:
+          requires:
+            - test
+      - train:
+          requires:
+            - generate-nas
+            - generate-shapes
