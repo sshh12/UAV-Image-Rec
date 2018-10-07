@@ -24,7 +24,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --user -r requirements-dev.txt
       - run: python generate/nas_gen.py
       - persist_to_workspace:
           root: generate
@@ -41,7 +41,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --user -r requirements-dev.txt
       - run: export ALL_SHAPES=(circle cross pentagon quarter-circle rectangle
                                 semicircle square star trapezoid triangle)
       - run: export SHAPE_TYPES=${ALL_SHAPES[$CIRCLE_NODE_INDEX]}
@@ -58,7 +58,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: generate
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --user -r requirements-dev.txt
       - run: python generate/train.py
       - store_artifacts:
           path: target_finder_model/data
