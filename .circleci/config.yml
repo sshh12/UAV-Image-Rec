@@ -13,9 +13,9 @@ jobs:
       - run: pip install --user tox
       - run: python -m tox
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: generate
           paths:
-            - generate/assets
+            - assets
 
   # Running a job to build not-a-shapes.
   generate-nas:
@@ -27,9 +27,9 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: python generate/nas_gen.py
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: generate
           paths:
-            - generate/shapes/nas
+            - shapes/nas
 
   # Parallel jobs to build each type of shape.
   generate-shapes:
@@ -47,9 +47,9 @@ jobs:
       - run: export SHAPE_TYPES=${ALL_SHAPES[$CIRCLE_NODE_INDEX]}
       - run: python generate/shape_gen.py
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: generate
           paths:
-            - generate/shapes/*
+            - shapes/*
 
   # Training job using the shapes from the shapes above.
   train:
@@ -57,7 +57,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /tmp/workspace
+          at: generate
       - run: pip install -r requirements-dev.txt
       - run: python generate/train.py
       - store_artifacts:
