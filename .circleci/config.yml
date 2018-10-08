@@ -117,10 +117,18 @@ workflows:
   version: 2
   test-generate-train:
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              only: /.*/
       - nas-gen: &gen-job
           requires:
             - test
+          filters: &release-filters
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
       - circle-gen:
           <<: *gen-job
       - cross-gen:
@@ -154,6 +162,10 @@ workflows:
             - star-gen
             - trapezoid-gen
             - triangle-gen
+          filters:
+            <<: *release-filters
       - release:
           requires:
             - train
+          filters:
+            <<: *release-filters
