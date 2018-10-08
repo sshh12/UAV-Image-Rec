@@ -16,6 +16,10 @@ jobs:
           root: generate
           paths:
             - assets
+      - run: tar -cvzf test-shapes.tar.gz test/shapes
+      - store_artifacts:
+          path: test-shapes.tar.gz
+          destination: shapes
 
   # Running a job to build not-a-shapes.
   nas-gen:
@@ -107,6 +111,7 @@ jobs:
       - run: ./scripts/create-release.sh
       - store_artifacts:
           path: release
+          destination: release
 
 workflows:
   version: 2
