@@ -112,6 +112,27 @@ jobs:
       - store_artifacts:
           path: release
           destination: release
+      - persist_to_workspace:
+          root: '.'
+          paths:
+            - release
+
+  # Job that publishes to GitHub Releases for tags.
+  publish:
+    docker:
+      - image: cibuilds/github:0.12
+    steps:
+      - attach_workspace:
+          at: '.'
+      - run: |
+          ghr \
+            -t ${GITHUB_TOKEN} \
+            -u ${CIRCLE_PROJECT_USERNAME} \
+            -r ${CIRCLE_PROJECT_REPONAME} \
+            -c ${CIRCLE_SHA1} \
+            -delete \
+            ${CIRCLE_TAG} \
+            ./release/
 
 workflows:
   version: 2
@@ -169,3 +190,11 @@ workflows:
             - train
           filters:
             <<: *release-filters
+      - publish:
+          requires:
+            - release
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
