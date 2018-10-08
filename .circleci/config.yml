@@ -19,7 +19,7 @@ jobs:
       - run: tar -cvzf test-shapes.tar.gz test/shapes
       - store_artifacts:
           path: test-shapes.tar.gz
-          destination: shapes
+          destination: test-shapes.tar.gz
 
   # Running a job to build not-a-shapes.
   nas-gen:
