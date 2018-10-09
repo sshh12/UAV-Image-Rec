@@ -162,7 +162,6 @@ def _create_shape(shape, base, background, background_color, alpha,
     image = _add_background_color(image, background_color)
     image = _add_alphanumeric(image, shape, alpha, alpha_color, font_file)
     image = _rotate_shape(image, shape, size, angle, crop)
-    image = _add_alpha_channel(image)
     image = _add_background(image, background, size, padding, blur_radius)
     image = image.convert('RGB')
 
@@ -173,6 +172,7 @@ def _get_base(base, size):
     # Start with a sized version of the base shape.
     image = base.copy()
     image.resize((size, size), 0)
+    image = image.convert('RGBA')
 
     return image
 
@@ -222,11 +222,7 @@ def _rotate_shape(image, shape, size, angle, crop):
     image = image.crop((crop, crop, image.width - crop, image.height - crop))
     image = image.resize((size, size), 0)
 
-    return image
-
-
-def _add_alpha_channel(image):
-    image = image.convert('RGBA')
+    # Remove black on corners after rotation.
     image_data = image.getdata()
     new_data = []
 
