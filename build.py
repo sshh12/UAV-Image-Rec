@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import multiprocessing
 import os.path
 import sys
 
@@ -13,7 +14,12 @@ from shape_gen import generate_all_shapes
 from train import train
 
 
-pull_all()
-generate_nas()
-generate_all_shapes()
-train()
+if __name__ == '__main__':
+    # Make sure Windows doesn't blow up with the multiprocessing in
+    # the shape generation script.
+    multiprocessing.freeze_support()
+
+    pull_all()
+    generate_nas()
+    generate_all_shapes()
+    train()
