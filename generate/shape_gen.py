@@ -192,7 +192,13 @@ def _add_background_color(image, background_color):
 
 
 def _add_alphanumeric(image, shape, alpha, alpha_color, font_file):
-    font_multiplier = 0.4 if shape not in ('star', 'triangle') else 0.3
+    if shape == 'star' or shape == 'trapezoid' or shape == 'triangle':
+        font_multiplier = 0.25
+    elif shape == 'rectangle':
+        font_multiplier = 0.35
+    else:
+        font_multiplier = 0.40
+
     font_size = int(round(font_multiplier * image.height))
 
     font = ImageFont.truetype(font_file, font_size)
@@ -200,12 +206,36 @@ def _add_alphanumeric(image, shape, alpha, alpha_color, font_file):
 
     draw = ImageDraw.Draw(image)
 
-    draw_x_rel = 1 / 3
-    draw_y_rel = 1 / 6 if shape not in ('star', 'triangle') else 1 / 3
-    draw_x = image.width * draw_x_rel
-    draw_y = image.height * draw_y_rel
+     # adjusting the centering for each category of shape
+    if shape == 'pentagon' or shape == 'semi-circle':
+        xCenter = image.width / 3
+        yCenter = image.height / 5
+    elif shape == 'rectangle':
+        xCenter = image.width / 3
+        yCenter = image.height / 3
+    elif shape == 'trapezoid':
+        xCenter = image.width / 2.6
+        yCenter = image.height / 2.9
+    elif shape == 'star':
+        xCenter = image.width / 2.4
+        yCenter = image.height / 2.8
+    elif shape == 'triangle':
+        xCenter = image.width / 2.4
+        yCenter = image.height / 2.7
+    elif shape == 'quarter-circle':
+        xCenter = image.width / 2.6
+        yCenter = image.height / 6
+    elif shape == 'cross':
+        xCenter = image.width / 2.6
+        yCenter = image.height / 4
+    elif shape == 'square':
+        xCenter = image.width / 2.5
+        yCenter = image.height / 3.9
+    else:
+        xCenter = image.width / 3
+        yCenter = image.height / 4
 
-    draw.text((draw_x, draw_y), alpha, font_color, font=font)
+    draw.text((xCenter, yCenter), alpha, font_color, font=font)
 
     return image
 
