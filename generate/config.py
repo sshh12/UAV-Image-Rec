@@ -47,8 +47,12 @@ ALPHAS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
 
 ALPHA_FONT_DIR = os.path.join(os.path.dirname(__file__), 'vendor', 'fonts')
 ALPHA_FONTS = [
+    os.path.join(ALPHA_FONT_DIR, 'Rajdhani', 'Rajdhani-Bold.ttf'),
+    os.path.join(ALPHA_FONT_DIR, 'Gudea', 'Gudea-Bold.ttf'),
+    os.path.join(ALPHA_FONT_DIR, 'Inconsolata', 'Inconsolata-Bold.ttf'),
+    os.path.join(ALPHA_FONT_DIR, 'Open_Sans', 'OpenSans-Bold.ttf'),
     os.path.join(ALPHA_FONT_DIR, 'Open_Sans', 'OpenSans-SemiBold.ttf'),
-    os.path.join(ALPHA_FONT_DIR, 'Open_Sans', 'OpenSans-Bold.ttf')
+    os.path.join(ALPHA_FONT_DIR, 'News_Cycle', 'NewsCycle-Bold.ttf')
 ]
 
 # The shapes to generate.
