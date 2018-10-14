@@ -192,51 +192,57 @@ def _add_background_color(image, background_color):
 
 
 def _add_alphanumeric(image, shape, alpha, alpha_color, font_file):
-    if shape == 'star' or shape == 'trapezoid' or shape == 'triangle':
+    # Adjust alphanumeric size based on the shape it will be on
+    if shape == 'star' or shape == 'triangle':
         font_multiplier = 0.25
     elif shape == 'rectangle':
-        font_multiplier = 0.35
+        font_multiplier = 0.30
     else:
         font_multiplier = 0.40
 
+    # Set font size, select font style from fonts file, set font color
     font_size = int(round(font_multiplier * image.height))
-
     font = ImageFont.truetype(font_file, font_size)
     font_color = webcolors.hex_to_rgb(alpha_color)
-
     draw = ImageDraw.Draw(image)
 
-    # adjusting the centering for each category of shape
-    if shape == 'pentagon' or shape == 'semicircle':
-        xCenter = image.width / 3
+    # Adjust centering of alphanumerics on shapes
+    if shape == 'pentagon':
+        xCenter = image.width / 2.8
+        yCenter = image.height / 4.8
+    elif shape == 'semicircle':
+        xCenter = image.width / 2.6
         yCenter = image.height / 5
     elif shape == 'rectangle':
-        xCenter = image.width / 3
-        yCenter = image.height / 3
+        xCenter = image.width / 2.4
+        yCenter = image.height / 4
     elif shape == 'trapezoid':
-        xCenter = image.width / 2.6
-        yCenter = image.height / 2.9
+        xCenter = image.width / 2.8
+        yCenter = image.height / 4.8
     elif shape == 'star':
         xCenter = image.width / 2.4
-        yCenter = image.height / 2.8
+        yCenter = image.height / 3.0
     elif shape == 'triangle':
         xCenter = image.width / 2.4
         yCenter = image.height / 2.7
     elif shape == 'quarter-circle':
         xCenter = image.width / 2.6
-        yCenter = image.height / 6
+        yCenter = image.height / 6.5
     elif shape == 'cross':
         xCenter = image.width / 2.6
         yCenter = image.height / 4
     elif shape == 'square':
-        xCenter = image.width / 2.5
-        yCenter = image.height / 3.9
+        xCenter = image.width / 2.8
+        yCenter = image.height / 4.0
+    elif shape == 'circle':
+        xCenter = image.width / 2.7
+        yCenter = image.height / 4.5
     else:
         xCenter = image.width / 3
         yCenter = image.height / 4
 
+    # Places the alphanumeric on the image
     draw.text((xCenter, yCenter), alpha, font_color, font=font)
-
     return image
 
 
