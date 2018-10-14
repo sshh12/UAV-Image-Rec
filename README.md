@@ -98,5 +98,5 @@ above). Note that the full-sized shape generation might take around 2 or more
 hours, assuming a 4-core machine, and using 8 threads. This is parallelized in
 the CI environment, giving faster builds.
 
-Full builds are run on master and on tags. The model is uploaded as a build
-artifact at the end and pushed to GitHub Releases on tags.
+Full builds are run on tags and the model is uploaded as a build artifact at
+the end and pushed to GitHub Releases.

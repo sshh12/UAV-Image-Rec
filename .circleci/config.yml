@@ -149,7 +149,7 @@ workflows:
             tags:
               only: /^v.*/
             branches:
-              only: master
+              ignore: /.*/
       - circle-gen:
           <<: *gen-job
       - cross-gen:
@@ -194,7 +194,4 @@ workflows:
           requires:
             - release
           filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+            <<: *release-filters
