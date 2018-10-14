@@ -1,11 +1,12 @@
 # Changelog
 
-## v0.2.0 (in development)
+## v0.2.0 (2018-10-14)
 
 ### Features
 
 - Model built with new shape generation system.
 - Shape generation is deterministic.
+- Improved alphanumeric fonts, placement, and sizing.
 
 ### Breaking Changes
 
