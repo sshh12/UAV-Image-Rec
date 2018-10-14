@@ -206,7 +206,7 @@ def _add_alphanumeric(image, shape, alpha, alpha_color, font_file):
 
     draw = ImageDraw.Draw(image)
 
-     # adjusting the centering for each category of shape
+    # adjusting the centering for each category of shape
     if shape == 'pentagon' or shape == 'semicircle':
         xCenter = image.width / 3
         yCenter = image.height / 5
