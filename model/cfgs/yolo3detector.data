@@ -1,0 +1,5 @@
+classes = 10
+train  = /TODO/shapes/trainc/trainc_shapes_list.txt
+valid  = /TODO/shapes/valc/valc_shapes_list.txt
+names = /TODO/data/uava2.names
+backup = backup/

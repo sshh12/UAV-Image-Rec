@@ -8,10 +8,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), 'generate'))
 
 
-from nas_gen import generate_nas
-from pull_assets import pull_all
-from shape_gen import generate_all_shapes
-from train import train
+from create_full_images import generate_all_shapes
 
 
 if __name__ == '__main__':
@@ -19,7 +16,4 @@ if __name__ == '__main__':
     # the shape generation script.
     multiprocessing.freeze_support()
 
-    pull_all()
-    generate_nas()
     generate_all_shapes()
-    train()

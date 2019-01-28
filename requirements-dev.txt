@@ -2,7 +2,4 @@ opencv-python
 numpy
 Pillow
 progress
-requests
-tensorflow>=1.7.0
-tensorflow-hub
-webcolors
+tqdm

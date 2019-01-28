@@ -1,0 +1,5 @@
+classes = 2
+train  = /TODO/shapes/trainexistc/trainexistc_shapes_list.txt
+valid  = /TODO/shapes/trainexistc/trainexistc_shapes_list.txt
+labels = /TODO/data/preuava.labels.list
+backup = backup/

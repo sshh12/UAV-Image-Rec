@@ -43,9 +43,7 @@ setup(
     url='https://github.com/uavaustin/target-finder-model',
     packages=find_packages(),
     package_data={
-        'target_finder_model': [
-            'data/graph.pb', 'data/labels.txt'
-        ]
+        'target_finder_model': []
     },
     license='MIT'
 )

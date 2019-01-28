@@ -111,7 +111,9 @@ venv.bak/
 
 # Shape generation directories
 /generate/assets/
-/generate/shapes/
-/generate/bottlenecks/
+/generate/data/
 /test/shapes/
-/test/bottlenecks/
+
+# Model
+*.weights
+darknet/
