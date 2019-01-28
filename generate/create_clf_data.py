@@ -1,53 +1,38 @@
 #!/usr/bin/env python3
 
+from tqdm import tqdm
 from PIL import Image
-from progress.bar import Bar
-import multiprocessing
 import random
+import config
 import glob
 import os
-import config
 
 
-NEW_WIDTH, NEW_HEIGHT = config.PRECLF_SIZE
+# Get constants from config
+CLF_WIDTH, CLF_HEIGHT = config.PRECLF_SIZE
 CROP_WIDTH, CROP_HEIGHT = config.CROP_SIZE
 OVERLAP = config.CROP_OVERLAP
+RATIO = CLF_WIDTH / CROP_WIDTH
+FILE_PATH = os.path.abspath(os.path.dirname(__file__))
+CLASSES = config.CLF_TYPES
 
-RATIO = NEW_WIDTH / CROP_WIDTH
 
-
-def get_resized_bboxes(x1, y1, x2, y2, bboxes):
-
-    rel_bboxes = []
-
-    w = x2 - x1
-    h = y2 - y1
-
-    for shape, bx, by, bw, bh in bboxes:
-
-        shape_name, alpha = shape.split("_")
+def contains_shape(x1, y1, x2, y2, data):
+    """Check if their is a bbox within these coords"""
+    for shape_desc, bx, by, bw, bh in data:
 
         if x1 < bx < bx + bw < x2 and y1 < by < by + bh < y2:
+            return True
 
-            rel_bboxes.append((config.SHAPE_TYPES.index(shape_name),
-                                   (bx - x1 + bw / 2) * RATIO / NEW_WIDTH,
-                                   (by - y1 + bh / 2) * RATIO / NEW_HEIGHT,
-                                   bw * RATIO / NEW_WIDTH,
-                                   bh * RATIO / NEW_HEIGHT))
-
-    return rel_bboxes
+    return False
 
 
-k = 0
+def create_clf_data(dataset_name, dataset_path, image_name, image, data):
+    """Generate data for the classifier model"""
+    full_width, full_height = image.size
 
-def create_cropped_data(gen_type, i, full_img, bboxes):
-
-    global k
-
-    full_width, full_height = full_img.size
-
-    target_images = []
-    background_images = []
+    backgrounds = []
+    shapes = []
 
     for y1 in range(0, full_height - CROP_HEIGHT, CROP_HEIGHT - OVERLAP):
 
@@ -56,79 +41,77 @@ def create_cropped_data(gen_type, i, full_img, bboxes):
             y2 = y1 + CROP_HEIGHT
             x2 = x1 + CROP_WIDTH
 
-            cropped_bboxes = get_resized_bboxes(x1, y1, x2, y2, bboxes)
+            cropped_img = image.crop((x1, y1, x2, y2))
+            cropped_img = cropped_img.resize((CLF_WIDTH, CLF_HEIGHT))
 
-            
-
-            cropped_img = full_img.crop((x1, y1, x2, y2))
-            cropped_img = cropped_img.resize((NEW_WIDTH, NEW_HEIGHT), Image.BICUBIC)
-
-            
-
-            if len(cropped_bboxes) == 0:
-                label = "background"
+            if contains_shape(x1, y1, x2, y2, data):
+                shapes.append(cropped_img)
             else:
-                label = "target"
+                backgrounds.append(cropped_img)
 
-            name = '{}_{}'.format(k, label)
+    # Keep classes balanced and randomize data
+    num_data = min(len(backgrounds), len(shapes))
+    random.shuffle(backgrounds)
+    random.shuffle(shapes)
 
-            full_name = os.path.join(os.path.abspath(os.path.dirname(__file__)), config.DATA_DIR, gen_type, 'images', name + '.png')
+    list_fn = os.path.join(dataset_path,
+                           '{}_list.txt'.format(dataset_name))
 
-            if label == "background":
-                background_images.append((cropped_img, full_name))
-            else:
-                target_images.append((cropped_img, full_name))
+    for i in range(num_data):
 
-            k += 1
+        shape_fn = '{}_{}_{}.png'.format(CLASSES[1], image_name, i)
+        shape_path = os.path.join(FILE_PATH, dataset_path, shape_fn)
 
-    
-    n = min(len(target_images), len(background_images))
+        bg_fn = '{}_{}_{}.png'.format(CLASSES[0], image_name, i)
+        bg_path = os.path.join(FILE_PATH, dataset_path, bg_fn)
 
-    random.shuffle(background_images)
+        shapes[i].save(shape_fn)
+        backgrounds[i].save(bg_fn)
 
-    for i in range(n):
-        target_images[i][0].save(target_images[i][1])
-        background_images[i][0].save(background_images[i][1])
-        with open(os.path.join(config.DATA_DIR, gen_type, '{}_list.txt'.format(gen_type)), 'a') as list_file:
-            list_file.write(target_images[i][1] + "\n")
-            list_file.write(background_images[i][1] + "\n")
-
-            
+        with open(list_fn, 'a') as list_file:
+            list_file.write(shape_fn + "\n")
+            list_file.write(bg_fn + "\n")
 
 
-def main(gen_type):
+def convert_data(dataset_type):
 
-    os.makedirs(os.path.join(config.DATA_DIR, 'clf_' + gen_type, 'images'), exist_ok=True)
+    new_dataset = 'clf_' + dataset_type
+    images_path = os.path.join(config.DATA_DIR, dataset_type, 'images')
+    new_images_path = os.path.join(config.DATA_DIR, new_dataset, 'images')
 
-    im_fns = glob.glob(os.path.join(config.DATA_DIR, gen_type, 'images', '*.png'))
+    os.makedirs(new_images_path, exist_ok=True)
 
-    bar = Bar('Cropping', max=len(im_fns))
-
-    with open(os.path.join(config.DATA_DIR, 'clf_' + gen_type, '{}_list.txt'.format('clf_' + gen_type)), 'w') as list_file:
+    new_list_fn = '{}_list.txt'.format(new_dataset)
+    with open(os.path.join(new_images_path, new_list_fn), 'w') as list_file:
         list_file.write("")
 
-    for img_fn in im_fns:
+    dataset_images = glob.glob(os.path.join(images_path, '*.png'))
+
+    for img_fn in tqdm(dataset_images):
 
         label_fn = img_fn.replace('.png', '.txt')
 
-        bboxes = []
+        image_data = []
 
         with open(label_fn, 'r') as label_file:
             for line in label_file.readlines():
-                shape, x, y, w, h = line.strip().split(' ')
+                shape_desc, x, y, w, h = line.strip().split(' ')
                 x, y, w, h = int(x), int(y), int(w), int(h)
-                bboxes.append((shape, x, y, w, h))
+                image_data.append((shape_desc, x, y, w, h))
 
-        create_cropped_data('clf_' + gen_type, os.path.basename(img_fn).replace('.png', ''), Image.open(img_fn), bboxes)
+        image_name = os.path.basename(img_fn).replace('.png', '')
 
-        os.remove(img_fn)
-        os.remove(label_fn)
+        create_clf_data(new_dataset,
+                        new_images_path,
+                        image_name,
+                        Image.open(img_fn),
+                        image_data)
 
-        bar.next()
-
-    bar.finish()
+        if config.DELETE_ON_CONVERT:
+            os.remove(img_fn)
+            os.remove(label_fn)
 
 
 if __name__ == "__main__":
-    main('train')
-    main('val')
+    convert_data('train')
+    convert_data('val')

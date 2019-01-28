@@ -19,11 +19,12 @@ import random
 import sys
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
-from progress.bar import Bar
+from tqdm import tqdm
 
 import config
 
-# fix me
+
+# Get constants from config
 NUM_GEN = int(config.NUM_IMAGES)
 MAX_SHAPES = int(config.MAX_PER_SHAPE)
 FULL_SIZE = config.FULL_SIZE
@@ -32,10 +33,11 @@ ALPHA_COLORS = config.ALPHA_COLORS
 COLORS = config.COLORS
 
 
-def generate_all_shapes(gen_type):
-
+def generate_all_shapes(gen_type, num_gen):
+    """Generate the full sized images"""
+    images_dir = os.path.join(config.DATA_DIR, gen_type, 'images')
     os.makedirs(config.DATA_DIR, exist_ok=True)
-    os.makedirs(os.path.join(config.DATA_DIR, gen_type, 'images'), exist_ok=True)
+    os.makedirs(images_dir, exist_ok=True)
 
     r_state = random.getstate()
     random.seed(gen_type)
@@ -48,22 +50,22 @@ def generate_all_shapes(gen_type):
     for shape in config.SHAPE_TYPES:
         base_shapes[shape] = _get_base_shapes(shape)
 
-    numbers = list(range(0, NUM_GEN))
+    numbers = list(range(0, num_gen))
 
-    backgrounds = _random_list(_get_backgrounds())
-    flip_bg = _random_list([False, True])
-    mirror_bg = _random_list([False, True])
-    blurs = _random_list(range(1, 2))
-    num_targets = _random_list(range(1, MAX_SHAPES))
+    backgrounds = _random_list(_get_backgrounds(), num_gen)
+    flip_bg = _random_list([False, True], num_gen)
+    mirror_bg = _random_list([False, True], num_gen)
+    blurs = _random_list(range(1, 2), num_gen)
+    num_targets = _random_list(range(1, MAX_SHAPES), num_gen)
 
     shape_params = []
 
-    for i in range(NUM_GEN):
+    for i in range(num_gen):
 
         n = num_targets[i]
 
         shape_names = _random_list(config.SHAPE_TYPES, n)
-        bases = [ random.choice(base_shapes[shape]) for shape in shape_names ]
+        bases = [random.choice(base_shapes[shape]) for shape in shape_names]
         alphas = _random_list(config.ALPHAS, n)
         font_files = _random_list(config.ALPHA_FONTS, n)
 
@@ -74,8 +76,8 @@ def generate_all_shapes(gen_type):
             if alpha_colors[i] == target_color:
                 alpha_colors[i] = 'white'
 
-        target_rgbs = [ random.choice(COLORS[color]) for color in target_colors ]
-        alpha_rgbs = [ random.choice(COLORS[color]) for color in alpha_colors ]
+        target_rgbs = [random.choice(COLORS[color]) for color in target_colors]
+        alpha_rgbs = [random.choice(COLORS[color]) for color in alpha_colors]
 
         sizes = _random_list(range(35, 55), n)
 
@@ -85,35 +87,28 @@ def generate_all_shapes(gen_type):
         ys = _random_list(range(200, FULL_SIZE[1] - 200, 50), n)
 
         shape_params.append(list(zip(shape_names, bases, alphas,
-                                font_files, sizes, angles,
-                                target_colors, target_rgbs,
-                                alpha_colors, alpha_rgbs,
-                                xs, ys)))
+                                     font_files, sizes, angles,
+                                     target_colors, target_rgbs,
+                                     alpha_colors, alpha_rgbs,
+                                     xs, ys)))
 
     # Put everything into one large iterable so that we can split up
     # data across thread pools.
-    data = zip(numbers, backgrounds, flip_bg, mirror_bg, blurs, shape_params, [gen_type] * NUM_GEN)
+    data = zip(numbers, backgrounds, flip_bg, mirror_bg,
+               blurs, shape_params, [gen_type] * num_gen)
 
     random.setstate(r_state)
-
-    num_width = str(len(str(NUM_GEN)))
-    bar_suffix = '%(index)' + num_width + 'd/%(max)d [%(elapsed_td)s]'
-
-    bar = Bar('Data Generation for ' + gen_type,
-              max=NUM_GEN, suffix=bar_suffix)
 
     # Generate in a pool. If specificed, use a given number of
     # threads.
     with multiprocessing.Pool(None) as pool:
-        for i in pool.imap_unordered(_generate_single_example, data):
-            bar.next()
+        processes = pool.imap_unordered(_generate_single_example, data)
+        for i in tqdm(processes, total=num_gen):
+            pass
 
-    bar.finish()
 
-
-# One iteration in the function above, runs in a pool.
 def _generate_single_example(data):
-
+    """Creates a single full image"""
     number, background, flip_bg, mirror_bg, blur, shape_params, gen_type = data
 
     background = background.copy()
@@ -124,10 +119,12 @@ def _generate_single_example(data):
 
     shape_imgs = [_create_shape(*shape_param) for shape_param in shape_params]
 
-    shape_bboxes, full_img = _add_shapes(background, shape_imgs, shape_params, blur)
+    shape_bboxes, full_img = _add_shapes(background, shape_imgs,
+                                         shape_params, blur)
 
-    img_fn = os.path.join(config.DATA_DIR, gen_type, 'images', 'ex{}.png'.format(number))
-    labels_fn = os.path.join(config.DATA_DIR, gen_type, 'images', 'ex{}.txt'.format(number))
+    data_path = os.path.join(config.DATA_DIR, gen_type, 'images')
+    img_fn = os.path.join(data_path, 'ex{}.png'.format(number))
+    labels_fn = os.path.join(data_path, 'ex{}.txt'.format(number))
 
     full_img.save(img_fn)
 
@@ -137,7 +134,7 @@ def _generate_single_example(data):
 
 
 def _add_shapes(background, shape_imgs, shape_params, blur_radius):
-
+    """Paste shapes onto background and return bboxes"""
     shape_bboxes = []
 
     for i, shape_param in enumerate(shape_params):
@@ -150,42 +147,44 @@ def _add_shapes(background, shape_imgs, shape_params, blur_radius):
         bg_at_shape = background.crop((x1 + x, y1 + y, x2 + x, y2 + y))
         bg_at_shape.paste(shape_img, (0, 0), shape_img)
         bg_at_shape = bg_at_shape.filter(ImageFilter.GaussianBlur(blur_radius))
-
-        shape_bboxes.append(("_".join([shape_param[0], shape_param[2]]), x, y, x2 - x1, y2 - y1))
-
         background.paste(bg_at_shape, (x, y))
+
+        target_name = "_".join([shape_param[0], shape_param[2]])
+        shape_bboxes.append((target_name, x, y, x2 - x1, y2 - y1))
 
     return shape_bboxes, background.convert('RGB')
 
 
-# Get the background assets. This is returned as list of images.
 def _get_backgrounds():
-
+    """Get the background assets"""
+    # Can be a mix of .png and .jpg
     filenames = glob.glob(os.path.join(config.BACKGROUNDS_DIR, '*.png'))
     filenames += glob.glob(os.path.join(config.BACKGROUNDS_DIR, '*.jpg'))
 
-    return [Image.open(filename).resize(FULL_SIZE) for filename in sorted(filenames)]
+    return [Image.open(filename).resize(FULL_SIZE)
+            for filename in sorted(filenames)]
 
 
-# Get the base shape assets. This is returned as list of images.
 def _get_base_shapes(shape):
-    # filenames = glob.glob(os.path.join(config.BASE_SHAPES_DIR, shape, '*.png'))
-    #
-    # return [Image.open(sorted(filenames)[0])]
-    return [Image.open(os.path.join(config.BASE_SHAPES_DIR, shape, '{}-01.png'.format(shape)))]
+    """Get the base shape images for a given shapes"""
+    # For now just using the first one to prevent bad alpha placement
+    # TODO: Use more base shapes
+    base_path = os.path.join(config.BASE_SHAPES_DIR,
+                             shape,
+                             '{}-01.png'.format(shape))
+    return [Image.open(base_path)]
 
 
-# Return a list with items randomly chosen.
-def _random_list(items, count=NUM_GEN):
+def _random_list(items, count):
+    """Get a list of items with length count"""
     return [random.choice(items) for i in range(0, count)]
 
 
-# Create a shape given all the input parameters.
 def _create_shape(shape, base, alpha,
                   font_file, size, angle,
                   target_color, target_rgb,
                   alpha_color, alpha_rgb, x, y):
-
+    """Create a shape given all the input parameters"""
     target_rgb = _augment_color(target_rgb)
     alpha_rgb = _augment_color(alpha_rgb)
 
@@ -201,6 +200,7 @@ def _create_shape(shape, base, alpha,
 
 
 def _augment_color(color_rgb):
+    """Shift the color a bit"""
     r, g, b = color_rgb
     r = max(min(r + random.randint(-10, 11), 255), 1)
     g = max(min(g + random.randint(-10, 11), 255), 1)
@@ -209,8 +209,7 @@ def _augment_color(color_rgb):
 
 
 def _get_base(base, target_rgb, size):
-    # Start with a sized version of the base shape.
-
+    """Copy and recolor the base shape"""
     image = base.copy()
     image = image.resize((256, 256), 0)
     image = image.convert('RGBA')
@@ -218,22 +217,22 @@ def _get_base(base, target_rgb, size):
     for x in range(image.width):
         for y in range(image.height):
 
-            pixel_color = image.getpixel((x, y))
+            r, g, b = image.getpixel((x, y))
 
-            if pixel_color[0] != 255 or pixel_color[1] != 255 or pixel_color[2] != 255:
-                image.putpixel((x, y), (*target_rgb, 255))
+            if r != 255 or g != 255 or b != 255:
+                image.putpixel((x, y), (r, g, b, 255))
 
     return image
 
-# remove white and black edges
-def _strip_image(image):
 
+def _strip_image(image):
+    """Remove white and black edges"""
     for x in range(image.width):
         for y in range(image.height):
 
-            pixel_color = image.getpixel((x, y))
+            r, g, b = image.getpixel((x, y))
 
-            if pixel_color[0] == 255 and pixel_color[1] == 255 and pixel_color[2] == 255:
+            if r == 255 and g == 255 and b == 255:
                 image.putpixel((x, y), (0, 0, 0, 0))
 
     image = image.crop(image.getbbox())
@@ -298,18 +297,15 @@ def _add_alphanumeric(image, shape, alpha, alpha_rgb, font_file):
     else:
         pass
 
-    draw.text( (x, y) , alpha, alpha_rgb, font=font)
+    draw.text((x, y), alpha, alpha_rgb, font=font)
 
     return image
 
 
 def _rotate_shape(image, shape, angle):
-
-    image = image.rotate(angle, expand=1)
-
-    return image
+    return image.rotate(angle, expand=1)
 
 
 if __name__ == '__main__':
-    generate_all_shapes('train')
-    generate_all_shapes('val')
+    generate_all_shapes('train', config.NUM_IMAGES)
+    generate_all_shapes('val', config.NUM_VAL_IMAGES)

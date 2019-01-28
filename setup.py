@@ -43,7 +43,10 @@ setup(
     url='https://github.com/uavaustin/target-finder-model',
     packages=find_packages(),
     package_data={
-        'target_finder_model': []
+        'target_finder_model': [
+            'data/preclf-test.cfg',
+            'data/yolo3detector-test.cfg'
+        ]
     },
     license='MIT'
 )

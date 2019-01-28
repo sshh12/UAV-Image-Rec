@@ -1,45 +1,47 @@
 #!/usr/bin/env python3
 
+from tqdm import tqdm
 from PIL import Image
-from progress.bar import Bar
-import multiprocessing
+import config
 import glob
 import os
-import config
 
-NEW_WIDTH, NEW_HEIGHT = config.DETECTOR_SIZE
+
+# Get constants from config
+DET_WIDTH, DET_HEIGHT = config.DETECTOR_SIZE
 CROP_WIDTH, CROP_HEIGHT = config.CROP_SIZE
 OVERLAP = config.CROP_OVERLAP
-RATIO = NEW_WIDTH / CROP_WIDTH
+RATIO = DET_WIDTH / CROP_WIDTH
+FILE_PATH = os.path.abspath(os.path.dirname(__file__))
+CLASSES = config.SHAPE_TYPES
 
 
-def get_resized_bboxes(x1, y1, x2, y2, bboxes):
+def get_converted_bboxes(x1, y1, x2, y2, data):
+    """Find bboxes in coords and convert them to yolo format"""
+    bboxes = []
 
-    rel_bboxes = []
+    for shape_desc, bx, by, bw, bh in data:
 
-    w = x2 - x1
-    h = y2 - y1
-
-    for shape, bx, by, bw, bh in bboxes:
-
-        shape_name, alpha = shape.split("_")
+        shape_name, alpha = shape_desc.split("_")
 
         if x1 < bx < bx + bw < x2 and y1 < by < by + bh < y2:
 
-            rel_bboxes.append((config.SHAPE_TYPES.index(shape_name),
-                                   (bx - x1 + bw / 2) * RATIO / NEW_WIDTH,
-                                   (by - y1 + bh / 2) * RATIO / NEW_HEIGHT,
-                                   bw * RATIO / NEW_WIDTH,
-                                   bh * RATIO / NEW_HEIGHT))
+            # Yolo3 Format
+            # class_idx center_x/im_w center_y/im_h w/im_w h/im_h
+            bboxes.append((CLASSES.index(shape_name),
+                          (bx - x1 + bw / 2) * RATIO / DET_WIDTH,
+                          (by - y1 + bh / 2) * RATIO / DET_HEIGHT,
+                          bw * RATIO / DET_WIDTH,
+                          bh * RATIO / DET_HEIGHT))
 
-    return rel_bboxes
+    return bboxes
 
 
-def create_cropped_data(gen_type, i, full_img, bboxes):
+def create_detector_data(dataset_name, dataset_path, image_name, image, data):
+    """Generate data for the detector model"""
+    full_width, full_height = image.size
 
     k = 0
-
-    full_width, full_height = full_img.size
 
     for y1 in range(0, full_height - CROP_HEIGHT, CROP_HEIGHT - OVERLAP):
 
@@ -48,64 +50,73 @@ def create_cropped_data(gen_type, i, full_img, bboxes):
             y2 = y1 + CROP_HEIGHT
             x2 = x1 + CROP_WIDTH
 
-            cropped_bboxes = get_resized_bboxes(x1, y1, x2, y2, bboxes)
+            cropped_bboxes = get_converted_bboxes(x1, y1, x2, y2, data)
 
             if len(cropped_bboxes) == 0:
+                # discard crop b/c no shape
                 continue
-
-            cropped_img = full_img.crop((x1, y1, x2, y2))
-            cropped_img = cropped_img.resize((NEW_WIDTH, NEW_HEIGHT), Image.BICUBIC)
-
-            name = '{}_crop{}'.format(i, k)
-            
-            cropped_img.save(os.path.join(config.DATA_DIR, gen_type, 'images', name + '.png'))
-
-            with open(os.path.join(config.DATA_DIR, gen_type, 'images', name + '.txt'), 'w') as label_file:
-                for bbox in cropped_bboxes:
-                    label_file.write('{} {} {} {} {}\n'.format(*bbox))
 
             k += 1
 
-            with open(os.path.join(config.DATA_DIR, gen_type, '{}_list.txt'.format(gen_type)), 'a') as list_file:
-                list_file.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), config.DATA_DIR, gen_type, 'images', name + '.png') + "\n")
+            cropped_img = image.crop((x1, y1, x2, y2))
+            cropped_img = cropped_img.resize((DET_WIDTH, DET_HEIGHT))
 
-            
+            name = '{}_crop{}'.format(image_name, k)
+            bbox_fn = os.path.join(dataset_path, name + '.txt')
+            image_fn = os.path.join(FILE_PATH, dataset_path, name + '.png')
+            list_fn = '{}_list.txt'.format(dataset_name)
+            list_path = os.path.join(dataset_path, list_fn)
+
+            cropped_img.save(image_fn)
+
+            with open(bbox_fn, 'w') as label_file:
+                for bbox in cropped_bboxes:
+                    label_file.write('{} {} {} {} {}\n'.format(*bbox))
+
+            with open(list_path, 'a') as list_file:
+                list_file.write(image_fn + "\n")
 
 
-def main(gen_type):
+def convert_data(dataset_type):
 
-    os.makedirs(os.path.join(config.DATA_DIR, 'detector_' + gen_type, 'images'), exist_ok=True)
+    new_dataset = 'detector_' + dataset_type
+    images_path = os.path.join(config.DATA_DIR, dataset_type, 'images')
+    new_images_path = os.path.join(config.DATA_DIR, new_dataset, 'images')
 
-    im_fns = glob.glob(os.path.join(config.DATA_DIR, gen_type, 'images', '*.png'))
+    os.makedirs(new_images_path, exist_ok=True)
 
-    bar = Bar('Cropping', max=len(im_fns))
-
-    with open(os.path.join(config.DATA_DIR, 'detector_' + gen_type, '{}_list.txt'.format('detector_' + gen_type)), 'w') as list_file:
+    # Clear/create data index
+    new_list_fn = '{}_list.txt'.format(new_dataset)
+    with open(os.path.join(new_images_path, new_list_fn), 'w') as list_file:
         list_file.write("")
 
-    for img_fn in im_fns:
+    dataset_images = glob.glob(os.path.join(images_path, '*.png'))
+
+    for img_fn in tqdm(dataset_images):
 
         label_fn = img_fn.replace('.png', '.txt')
 
-        bboxes = []
+        image_data = []
 
         with open(label_fn, 'r') as label_file:
             for line in label_file.readlines():
-                shape, x, y, w, h = line.strip().split(' ')
+                shape_desc, x, y, w, h = line.strip().split(' ')
                 x, y, w, h = int(x), int(y), int(w), int(h)
-                bboxes.append((shape, x, y, w, h))
+                image_data.append((shape_desc, x, y, w, h))
 
-        create_cropped_data('detector_' + gen_type, os.path.basename(img_fn).replace('.png', ''), Image.open(img_fn), bboxes)
+        image_name = os.path.basename(img_fn).replace('.png', '')
+
+        create_detector_data(new_dataset,
+                             new_images_path,
+                             image_name,
+                             Image.open(img_fn),
+                             image_data)
 
         if config.DELETE_ON_CONVERT:
             os.remove(img_fn)
             os.remove(label_fn)
 
-        bar.next()
-
-    bar.finish()
-
 
 if __name__ == "__main__":
-    main('train')
-    main('val')
+    convert_data('train')
+    convert_data('val')
