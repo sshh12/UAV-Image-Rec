@@ -65,15 +65,15 @@ def create_clf_data(dataset_name, dataset_path, image_name, image, data):
         bg_fn = '{}_{}_{}.png'.format(CLASSES[0], image_name, i)
         bg_path = os.path.join(FILE_PATH, dataset_path, bg_fn)
 
-        shapes[i].save(shape_fn)
-        backgrounds[i].save(bg_fn)
+        shapes[i].save(shape_path)
+        backgrounds[i].save(bg_path)
 
         with open(list_fn, 'a') as list_file:
-            list_file.write(shape_fn + "\n")
-            list_file.write(bg_fn + "\n")
+            list_file.write(shape_path + "\n")
+            list_file.write(bg_path + "\n")
 
 
-def convert_data(dataset_type):
+def convert_data(dataset_type, num, offset=0):
 
     new_dataset = 'clf_' + dataset_type
     images_path = os.path.join(config.DATA_DIR, dataset_type, 'images')
@@ -81,11 +81,13 @@ def convert_data(dataset_type):
 
     os.makedirs(new_images_path, exist_ok=True)
 
-    new_list_fn = '{}_list.txt'.format(new_dataset)
-    with open(os.path.join(new_images_path, new_list_fn), 'w') as list_file:
-        list_file.write("")
+    if offset == 0:
+        new_list_fn = '{}_list.txt'.format(new_dataset)
+        with open(os.path.join(new_images_path, new_list_fn), 'w') as im_list:
+            im_list.write("")
 
-    dataset_images = glob.glob(os.path.join(images_path, '*.png'))
+    dataset_images = [os.path.join(images_path, f'ex{i}.png')
+                      for i in range(offset, num + offset)]
 
     for img_fn in tqdm(dataset_images):
 
@@ -113,5 +115,5 @@ def convert_data(dataset_type):
 
 
 if __name__ == "__main__":
-    convert_data('train')
-    convert_data('val')
+    convert_data('train', config.NUM_IMAGES, config.NUM_OFFSET)
+    convert_data('val', config.NUM_VAL_IMAGES, config.NUM_VAL_OFFSET)

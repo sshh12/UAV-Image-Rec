@@ -45,7 +45,9 @@ setup(
     package_data={
         'target_finder_model': [
             'data/preclf-test.cfg',
-            'data/yolo3detector-test.cfg'
+            'data/yolo3detector-test.cfg',
+            'data/preclf-train_final.weights',
+            'data/yolo3detector-train_final.weights'
         ]
     },
     license='MIT'

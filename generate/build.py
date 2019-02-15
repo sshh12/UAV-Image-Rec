@@ -4,11 +4,10 @@ import multiprocessing
 import os.path
 import sys
 
-
-sys.path.append(os.path.join(os.path.dirname(__file__), 'generate'))
-
-
+from pull_assets import pull_all
 from create_full_images import generate_all_shapes
+from create_detection_data import convert_data as det_convert_data
+from create_clf_data import convert_data
 
 
 if __name__ == '__main__':
@@ -16,4 +15,8 @@ if __name__ == '__main__':
     # the shape generation script.
     multiprocessing.freeze_support()
 
-    generate_all_shapes()
+    pull_all()
+
+    generate_all_shapes('testing', 10)
+    det_convert_data('testing', 10)
+    convert_data('testing', 10)

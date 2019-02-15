@@ -2,4 +2,5 @@ opencv-python
 numpy
 Pillow
 progress
+requests
 tqdm

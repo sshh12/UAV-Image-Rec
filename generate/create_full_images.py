@@ -33,14 +33,14 @@ ALPHA_COLORS = config.ALPHA_COLORS
 COLORS = config.COLORS
 
 
-def generate_all_shapes(gen_type, num_gen):
+def generate_all_shapes(gen_type, num_gen, offset=0):
     """Generate the full sized images"""
     images_dir = os.path.join(config.DATA_DIR, gen_type, 'images')
     os.makedirs(config.DATA_DIR, exist_ok=True)
     os.makedirs(images_dir, exist_ok=True)
 
     r_state = random.getstate()
-    random.seed(gen_type)
+    random.seed(gen_type + str(offset))
 
     # All the random selection is generated ahead of time, that way
     # the process can be resumed without the shapes changing on each
@@ -50,7 +50,7 @@ def generate_all_shapes(gen_type, num_gen):
     for shape in config.SHAPE_TYPES:
         base_shapes[shape] = _get_base_shapes(shape)
 
-    numbers = list(range(0, num_gen))
+    numbers = list(range(offset, offset + num_gen))
 
     backgrounds = _random_list(_get_backgrounds(), num_gen)
     flip_bg = _random_list([False, True], num_gen)
@@ -217,7 +217,7 @@ def _get_base(base, target_rgb, size):
     for x in range(image.width):
         for y in range(image.height):
 
-            r, g, b = image.getpixel((x, y))
+            r, g, b, a = image.getpixel((x, y))
 
             if r != 255 or g != 255 or b != 255:
                 image.putpixel((x, y), (r, g, b, 255))
@@ -230,7 +230,7 @@ def _strip_image(image):
     for x in range(image.width):
         for y in range(image.height):
 
-            r, g, b = image.getpixel((x, y))
+            r, g, b, a = image.getpixel((x, y))
 
             if r == 255 and g == 255 and b == 255:
                 image.putpixel((x, y), (0, 0, 0, 0))
@@ -307,5 +307,5 @@ def _rotate_shape(image, shape, angle):
 
 
 if __name__ == '__main__':
-    generate_all_shapes('train', config.NUM_IMAGES)
-    generate_all_shapes('val', config.NUM_VAL_IMAGES)
+    generate_all_shapes('train', config.NUM_IMAGES, config.NUM_OFFSET)
+    generate_all_shapes('val', config.NUM_VAL_IMAGES, config.NUM_VAL_OFFSET)

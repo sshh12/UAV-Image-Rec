@@ -5,5 +5,5 @@ import os
 import target_finder_model
 
 
-def do_fake_test():
-    pass
+def test_model():
+    assert True

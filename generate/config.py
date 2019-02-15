@@ -32,7 +32,10 @@ DATA_DIR = os.environ.get('DATA_DIR',
                           os.path.join(os.path.dirname(__file__), 'data'))
 
 # [Number of Images]
+# Generate num - offset images
+NUM_OFFSET = int(os.environ.get('NUM_OFFSET', '0'))
 NUM_IMAGES = int(os.environ.get('NUM_IMAGES', '30'))
+NUM_VAL_OFFSET = int(os.environ.get('NUM_VAL_OFFSET', '0'))
 NUM_VAL_IMAGES = int(os.environ.get('NUM_VAL_IMAGES', '10'))
 
 # Max images to generate per image
