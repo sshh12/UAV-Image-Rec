@@ -97,7 +97,7 @@ COLORS = {
         (210, 140, 0)]
 }
 
-ALPHAS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+ALPHAS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ4')
 
 ALPHA_FONT_DIR = os.path.join(os.path.dirname(__file__), 'vendor', 'fonts')
 ALPHA_FONTS = [
@@ -108,6 +108,8 @@ ALPHA_FONTS = [
     os.path.join(ALPHA_FONT_DIR, 'Open_Sans', 'OpenSans-SemiBold.ttf'),
     os.path.join(ALPHA_FONT_DIR, 'News_Cycle', 'NewsCycle-Bold.ttf')
 ]
+
+YOLO_CLASSES = SHAPE_TYPES + ALPHAS
 
 # [Model Dimensions]
 FULL_SIZE = (4240, 2400)

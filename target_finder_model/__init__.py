@@ -23,7 +23,7 @@ CLF_CLASSES = ['background', 'shape_target']
 YOLO_CLASSES = (
     'circle,cross,pentagon,quarter-circle,rectangle,semicircle,square,star,'
     'trapezoid,triangle'
-).split(',')
+).split(',') + list('ABCDEFGHIJKLMNOPQRSTUVWXYZ4')
 
 # Other Model Params (match with generate/config.py)
 FULL_SIZE = (4240, 2400)

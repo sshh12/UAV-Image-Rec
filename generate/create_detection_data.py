@@ -13,7 +13,7 @@ CROP_WIDTH, CROP_HEIGHT = config.CROP_SIZE
 OVERLAP = config.CROP_OVERLAP
 RATIO = DET_WIDTH / CROP_WIDTH
 FILE_PATH = os.path.abspath(os.path.dirname(__file__))
-CLASSES = config.SHAPE_TYPES
+CLASSES = config.YOLO_CLASSES
 
 
 def get_converted_bboxes(x1, y1, x2, y2, data):
@@ -28,11 +28,20 @@ def get_converted_bboxes(x1, y1, x2, y2, data):
 
             # Yolo3 Format
             # class_idx center_x/im_w center_y/im_h w/im_w h/im_h
-            bboxes.append((CLASSES.index(shape_name),
-                          (bx - x1 + bw / 2) * RATIO / DET_WIDTH,
-                          (by - y1 + bh / 2) * RATIO / DET_HEIGHT,
-                          bw * RATIO / DET_WIDTH,
-                          bh * RATIO / DET_HEIGHT))
+            shape_class_idx = CLASSES.index(shape_name)
+            alpha_class_idx = CLASSES.index(alpha)
+            center_x = (bx - x1 + bw / 2) * RATIO / DET_WIDTH
+            center_y = (by - y1 + bh / 2) * RATIO / DET_HEIGHT
+            width = bw * RATIO / DET_WIDTH
+            height = bh * RATIO / DET_HEIGHT
+
+            bboxes.append((shape_class_idx,
+                          center_x, center_y,
+                          width, height))
+
+            bboxes.append((alpha_class_idx,
+                          center_x, center_y,
+                          width, height))
 
     return bboxes
 
