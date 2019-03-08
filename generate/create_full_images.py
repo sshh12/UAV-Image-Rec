@@ -192,7 +192,10 @@ def _create_shape(shape, base, alpha,
     image = _strip_image(image)
     image = _add_alphanumeric(image, shape, alpha, alpha_rgb, font_file)
 
-    image = image.resize((size, size))
+    w, h = image.size
+    ratio = min(size / w, size / h)
+    image = image.resize((int(w * ratio), int(h * ratio)))
+
     image = _rotate_shape(image, shape, angle)
     image = _strip_image(image)
 
@@ -214,12 +217,14 @@ def _get_base(base, target_rgb, size):
     image = image.resize((256, 256), 0)
     image = image.convert('RGBA')
 
+    r, g, b = target_rgb
+
     for x in range(image.width):
         for y in range(image.height):
 
-            r, g, b, a = image.getpixel((x, y))
+            pr, pg, pb, _ = image.getpixel((x, y))
 
-            if r != 255 or g != 255 or b != 255:
+            if pr != 255 or pg != 255 or pb != 255:
                 image.putpixel((x, y), (r, g, b, 255))
 
     return image
@@ -283,8 +288,8 @@ def _add_alphanumeric(image, shape, alpha, alpha_rgb, font_file):
     elif shape == 'star':
         pass
     elif shape == 'triangle':
-        y += 50
-        x -= 120
+        x -= 24
+        y += 12
     elif shape == 'quarter-circle':
         y -= 40
         x += 14

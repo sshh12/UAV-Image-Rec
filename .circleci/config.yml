@@ -6,7 +6,7 @@ version: 2
 jobs:
   # Testing job which builds a small model and runs sanity tests
   # against it.
-  test:
+  test-gen:
     <<: *defaults
     steps:
       - checkout
@@ -16,10 +16,26 @@ jobs:
           root: generate
           paths:
             - assets
+            - data/*
       - run: tar -cvzf test-data.tar.gz generate/data
       - store_artifacts:
           path: test-data.tar.gz
           destination: test-data.tar.gz
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: 'darknet'
+      - attach_workspace:
+          at: 'generate'
+      - run: rm model/weights/*
+      - run:
+          name: DarknetDetectorTest
+          command: darknet/darknet detector train model/cfgs/yolo3detector.tox.data model/cfgs/yolo3detector-tox.cfg darknet/darknet53.conv.74
+      - run:
+          name: DarknetClfTest
+          command: darknet/darknet classifier train model/cfgs/preclf.tox.data model/cfgs/preclf-tox.cfg
 
   # Parallel jobs to build shapes.
   part-a-gen:
@@ -202,37 +218,16 @@ jobs:
           paths:
             - release
 
-  # Job that publishes to GitHub Releases for tags.
-  publish:
-    docker:
-      - image: cibuilds/github:0.12
-    steps:
-      - attach_workspace:
-          at: '.'
-      - run: |
-          ghr \
-            -t ${GITHUB_TOKEN} \
-            -u ${CIRCLE_PROJECT_USERNAME} \
-            -r ${CIRCLE_PROJECT_REPONAME} \
-            -c ${CIRCLE_SHA1} \
-            -delete \
-            ${CIRCLE_TAG} \
-            ./release/
-
 workflows:
   version: 2
   test-generate-train:
     jobs:
+      - setup-darknet
+      - test-gen
       - test:
-          filters:
-            tags:
-              only: /.*/
-      - setup-darknet:
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+          requires:
+            - setup-darknet
+            - test-gen
       - part-a-gen: &gen-job
           requires:
             - test
@@ -265,10 +260,5 @@ workflows:
           requires:
             - train
             - train-clf
-          filters:
-            <<: *release-filters
-      - publish:
-          requires:
-            - release
           filters:
             <<: *release-filters
