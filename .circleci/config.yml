@@ -154,12 +154,10 @@ jobs:
           at: '..'
       - run: git clone https://github.com/AlexeyAB/darknet.git
       - run: make -C ./darknet
-      - run: wget -P darknet https://pjreddie.com/media/files/darknet53.conv.74
       - persist_to_workspace:
           root: 'darknet'
           paths:
             - 'darknet'
-            - 'darknet53.conv.74'
 
   # Training job using the shapes from the shapes above.
   train: &image-train-job
@@ -173,7 +171,7 @@ jobs:
       - run: rm model/weights/*
       - run:
           name: DarknetDetector
-          command: darknet/darknet detector train model/cfgs/yolo3detector.data model/cfgs/yolo3detector-train.cfg darknet/darknet53.conv.74
+          command: darknet/darknet detector train model/cfgs/yolo3detector.data model/cfgs/yolo3detector-train.cfg
           no_output_timeout: 1h
       - persist_to_workspace:
           root: model
