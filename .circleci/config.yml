@@ -32,7 +32,7 @@ jobs:
       - run: rm model/weights/*
       - run:
           name: DarknetDetectorTest
-          command: darknet/darknet detector train model/cfgs/yolo3detector.tox.data model/cfgs/yolo3detector-tox.cfg darknet/darknet53.conv.74
+          command: darknet/darknet detector train model/cfgs/yolo3detector.tox.data model/cfgs/yolo3detector-tox.cfg
       - run:
           name: DarknetClfTest
           command: darknet/darknet classifier train model/cfgs/preclf.tox.data model/cfgs/preclf-tox.cfg
