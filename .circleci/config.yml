@@ -153,6 +153,7 @@ jobs:
       - attach_workspace:
           at: '..'
       - run: git submodule init
+      - run: git submodule update
       - run: make -C ./darknet
       - persist_to_workspace:
           root: 'darknet'
