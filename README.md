@@ -5,6 +5,8 @@
 
 [![CircleCI](https://circleci.com/gh/uavaustin/target-finder-model/tree/master.svg?style=svg)](https://circleci.com/gh/uavaustin/target-finder-model/tree/master)
 
+*Models are released in tar archives with Github Releases. Model versions do	
+not necessarily correspond to a target-finder version.*
 
 ## Developer Instructions
 
@@ -16,7 +18,6 @@
         * If CPU `AVX=1` `OPENMP=1` `LIBSO=1`
         * If GPU `GPU=1` `CUDNN=1` `LIBSO=1`
         * `make`
-    * Download this [darknet53.conv.74](https://pjreddie.com/media/files/darknet53.conv.74)
 
 ### Generate
 * `python generate/pull_assets.py` Download base shapes and background images
