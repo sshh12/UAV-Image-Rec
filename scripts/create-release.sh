@@ -2,12 +2,16 @@
 
 cd $(dirname "$0")
 
-graph_file="../target_finder_model/data/graph.pb"
-labels_file="../target_finder_model/data/labels.txt"
+yolo_weights_file="../target_finder_model/data/yolo3detector-train_final.weights"
+clf_weights_file="../target_finder_model/data/preclf-train_final.weights"
+yolo_cfg_file="../target_finder_model/data/yolo3detector-test.cfg"
+clf_cfg_file="../target_finder_model/data/preclf-test.cfg"
 
 # Check that the model files exist.
-[ -f "$graph_file" ] || (>&2 echo "Missing graph.pb" && exit 1)
-[ -f "$labels_file" ] || (>&2 echo "Missing labels.txt" && exit 1)
+[ -f "$yolo_weights_file" ] || (>&2 echo "Missing Yolo Weights" && exit 1)
+[ -f "$clf_weights_file" ] || (>&2 echo "Missing Clf Weights" && exit 1)
+[ -f "$yolo_cfg_file" ] || (>&2 echo "Missing Yolo Cfg" && exit 1)
+[ -f "$clf_cfg_file" ] || (>&2 echo "Missing Clf Cfg" && exit 1)
 
 # Find the version number to release.
 version=$(grep -o -e "'.*'" "../target_finder_model/version.py" | tr -d "'")
@@ -19,17 +23,16 @@ archive_name="target-finder-model-""$version"".tar.gz"
 
 # Create the staging directory and the target-finder folder.
 echo "Staging files"
-mkdir -p "$tf_stage_dir"
+mkdir -p "$tf_stage_dir""/target_finder_model/data/"
+cp "$yolo_weights_file" "$tf_stage_dir""/target_finder_model/data/"
+cp "$clf_weights_file" "$tf_stage_dir""/target_finder_model/data/"
+cp "$yolo_cfg_file" "$tf_stage_dir""/target_finder_model/data/"
+cp "$clf_cfg_file" "$tf_stage_dir""/target_finder_model/data/"
 
 # Copy over python files.
 mkdir -p "$tf_stage_dir""/target_finder_model"
 find "../target_finder_model/" -name "*.py" -exec cp "{}" \
   "$tf_stage_dir/target_finder_model/" \;
-
-# Copy over the graph and labels.
-mkdir -p "$tf_stage_dir""/target_finder_model/data"
-cp "$graph_file" "$tf_stage_dir""/target_finder_model/data/"
-cp "$labels_file" "$tf_stage_dir""/target_finder_model/data/"
 
 # Copy over configuration and informational files.
 cp ../README.md ../LICENSE \

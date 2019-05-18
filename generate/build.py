@@ -4,14 +4,10 @@ import multiprocessing
 import os.path
 import sys
 
-
-sys.path.append(os.path.join(os.path.dirname(__file__), 'generate'))
-
-
-from nas_gen import generate_nas
 from pull_assets import pull_all
-from shape_gen import generate_all_shapes
-from train import train
+from create_full_images import generate_all_shapes
+from create_detection_data import convert_data as det_convert_data
+from create_clf_data import convert_data as clf_convert_data
 
 
 if __name__ == '__main__':
@@ -20,6 +16,7 @@ if __name__ == '__main__':
     multiprocessing.freeze_support()
 
     pull_all()
-    generate_nas()
-    generate_all_shapes()
-    train()
+
+    generate_all_shapes('testing', 5)
+    det_convert_data('testing', 5)
+    clf_convert_data('testing', 5)

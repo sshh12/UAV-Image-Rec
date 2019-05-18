@@ -6,7 +6,7 @@ version: 2
 jobs:
   # Testing job which builds a small model and runs sanity tests
   # against it.
-  test:
+  test-gen:
     <<: *defaults
     steps:
       - checkout
@@ -16,90 +16,185 @@ jobs:
           root: generate
           paths:
             - assets
-      - run: tar -cvzf test-shapes.tar.gz test/shapes
+            - data/*
+      - run: tar -cvzf test-data.tar.gz generate/data
       - store_artifacts:
-          path: test-shapes.tar.gz
-          destination: test-shapes.tar.gz
-
-  # Running a job to build not-a-shapes.
-  nas-gen:
+          path: test-data.tar.gz
+          destination: test-data.tar.gz
+  test:
     <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: 'darknet'
+      - attach_workspace:
+          at: 'generate'
+      - run: rm model/weights/*
+      - run:
+          name: DarknetDetectorTest
+          command: darknet/darknet detector train model/cfgs/yolo3detector.tox.data model/cfgs/yolo3detector-tox.cfg
+      - run:
+          name: DarknetClfTest
+          command: darknet/darknet classifier train model/cfgs/preclf.tox.data model/cfgs/preclf-tox.cfg
+
+  # Parallel jobs to build shapes.
+  part-a-gen:
+    <<: *defaults
+    environment:
+      - NUM_OFFSET: 0
+      - NUM_IMAGES: 10
+      - NUM_VAL_OFFSET: 0
+      - NUM_VAL_IMAGES: 2
     steps:
       - checkout
       - attach_workspace:
           at: generate
       - run: pip install --user -r requirements-dev.txt
-      - run: python generate/nas_gen.py
+      - run: python generate/create_full_images.py
+      - run: python generate/create_clf_data.py
+      - run: python generate/create_detection_data.py
+      - run: mv generate/data/detector_train/images/detector_train_list.txt generate/data/detector_train/images/detector_train_list_a.txt
+      - run: mv generate/data/detector_val/images/detector_val_list.txt generate/data/detector_val/images/detector_val_list_a.txt
+      - run: mv generate/data/clf_train/images/clf_train_list.txt generate/data/clf_train/images/clf_train_list_a.txt
+      - run: mv generate/data/clf_val/images/clf_val_list.txt generate/data/clf_val/images/clf_val_list_a.txt
       - persist_to_workspace:
           root: generate
-          paths:
-            - shapes/nas
-
-  # Parallel jobs to build each type of shape.
-  circle-gen: &shape-job
-    <<: *defaults
-    environment:
-      - SHAPE_TYPES: circle
-    steps:
-      - checkout
-      - attach_workspace:
-          at: generate
-      - run: pip install --user -r requirements-dev.txt
-      - run: python generate/shape_gen.py
-      - persist_to_workspace:
-          root: generate
-          paths:
-            - shapes/*
-  cross-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: cross
-  pentagon-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: pentagon
-  quarter-circle-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: quarter-circle
-  rectangle-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: rectangle
-  semicircle-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: semicircle
-  square-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: square
-  star-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: star
-  trapezoid-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: trapezoid
-  triangle-gen:
-    <<: *shape-job
-    environment:
-      - SHAPE_TYPES: triangle
-
-  # Training job using the shapes from the shapes above.
-  train:
-    <<: *defaults
-    steps:
-      - checkout
-      - attach_workspace:
-          at: generate
-      - run: pip install --user -r requirements-dev.txt
-      - run: python generate/train.py
-      - persist_to_workspace:
-          root: target_finder_model
           paths:
             - data/*
+  part-b-gen:
+    <<: *defaults
+    environment:
+      - NUM_OFFSET: 10
+      - NUM_IMAGES: 10
+      - NUM_VAL_OFFSET: 2
+      - NUM_VAL_IMAGES: 2
+    steps:
+      - checkout
+      - attach_workspace:
+          at: generate
+      - run: pip install --user -r requirements-dev.txt
+      - run: python generate/create_full_images.py
+      - run: python generate/create_clf_data.py
+      - run: python generate/create_detection_data.py
+      - run: mv generate/data/detector_train/images/detector_train_list.txt generate/data/detector_train/images/detector_train_list_b.txt
+      - run: mv generate/data/detector_val/images/detector_val_list.txt generate/data/detector_val/images/detector_val_list_b.txt
+      - run: mv generate/data/clf_train/images/clf_train_list.txt generate/data/clf_train/images/clf_train_list_b.txt
+      - run: mv generate/data/clf_val/images/clf_val_list.txt generate/data/clf_val/images/clf_val_list_b.txt
+      - persist_to_workspace:
+          root: generate
+          paths:
+            - data/*
+  part-c-gen:
+    <<: *defaults
+    environment:
+      - NUM_OFFSET: 20
+      - NUM_IMAGES: 10
+      - NUM_VAL_OFFSET: 4
+      - NUM_VAL_IMAGES: 2
+    steps:
+      - checkout
+      - attach_workspace:
+          at: generate
+      - run: pip install --user -r requirements-dev.txt
+      - run: python generate/create_full_images.py
+      - run: python generate/create_clf_data.py
+      - run: python generate/create_detection_data.py
+      - run: mv generate/data/detector_train/images/detector_train_list.txt generate/data/detector_train/images/detector_train_list_c.txt
+      - run: mv generate/data/detector_val/images/detector_val_list.txt generate/data/detector_val/images/detector_val_list_c.txt
+      - run: mv generate/data/clf_train/images/clf_train_list.txt generate/data/clf_train/images/clf_train_list_c.txt
+      - run: mv generate/data/clf_val/images/clf_val_list.txt generate/data/clf_val/images/clf_val_list_c.txt
+      - persist_to_workspace:
+          root: generate
+          paths:
+            - data/*
+  part-d-gen:
+    <<: *defaults
+    environment:
+      - NUM_OFFSET: 30
+      - NUM_IMAGES: 10
+      - NUM_VAL_OFFSET: 6
+      - NUM_VAL_IMAGES: 2
+    steps:
+      - checkout
+      - attach_workspace:
+          at: generate
+      - run: pip install --user -r requirements-dev.txt
+      - run: python generate/create_full_images.py
+      - run: python generate/create_clf_data.py
+      - run: python generate/create_detection_data.py
+      - run: mv generate/data/detector_train/images/detector_train_list.txt generate/data/detector_train/images/detector_train_list_d.txt
+      - run: mv generate/data/detector_val/images/detector_val_list.txt generate/data/detector_val/images/detector_val_list_d.txt
+      - run: mv generate/data/clf_train/images/clf_train_list.txt generate/data/clf_train/images/clf_train_list_d.txt
+      - run: mv generate/data/clf_val/images/clf_val_list.txt generate/data/clf_val/images/clf_val_list_d.txt
+      - persist_to_workspace:
+          root: generate
+          paths:
+            - data/*
+
+  merge-data:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: generate
+      - run: cat generate/data/detector_train/images/detector_train_list_*.txt > generate/data/detector_train/images/detector_train_list.txt
+      - run: cat generate/data/detector_val/images/detector_val_list_*.txt > generate/data/detector_val/images/detector_val_list.txt
+      - run: cat generate/data/clf_train/images/clf_train_list_*.txt > generate/data/clf_train/images/clf_train_list.txt
+      - run: cat generate/data/clf_val/images/clf_val_list_*.txt > generate/data/clf_val/images/clf_val_list.txt
+      - persist_to_workspace:
+          root: generate
+          paths:
+            - data/*
+
+  setup-darknet:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: '..'
+      - run: git submodule init
+      - run: git submodule update
+      - run: make -C ./darknet
+      - persist_to_workspace:
+          root: 'darknet'
+          paths:
+            - 'darknet'
+
+  # Training job using the shapes from the shapes above.
+  train: &image-train-job
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: 'darknet'
+      - attach_workspace:
+          at: 'generate'
+      - run: rm model/weights/*
+      - run:
+          name: DarknetDetector
+          command: darknet/darknet detector train model/cfgs/yolo3detector.data model/cfgs/yolo3detector-train.cfg
+          no_output_timeout: 1h
+      - persist_to_workspace:
+          root: model
+          paths:
+            - weights/*
+  train-clf:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: 'darknet'
+      - attach_workspace:
+          at: 'generate'
+      - run: rm model/weights/*
+      - run:
+          name: DarknetClf
+          command: darknet/darknet classifier train model/cfgs/preclf.data model/cfgs/preclf-train.cfg
+          no_output_timeout: 1h
+      - persist_to_workspace:
+          root: model
+          paths:
+            - weights/*
 
   # Job that creates a tar archive for the python library.
   release:
@@ -107,7 +202,12 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: target_finder_model
+          at: 'model'
+      - run: mkdir target_finder_model/data
+      - run: mv model/weights/yolo3detector-train_final.weights target_finder_model/data/yolo3detector-train_final.weights
+      - run: mv model/weights/preclf-train_final.weights target_finder_model/data/preclf-train_final.weights
+      - run: cp model/cfgs/preclf-test.cfg target_finder_model/data/preclf-test.cfg
+      - run: cp model/cfgs/yolo3detector-test.cfg target_finder_model/data/yolo3detector-test.cfg
       - run: ./scripts/create-release.sh
       - store_artifacts:
           path: release
@@ -117,32 +217,17 @@ jobs:
           paths:
             - release
 
-  # Job that publishes to GitHub Releases for tags.
-  publish:
-    docker:
-      - image: cibuilds/github:0.12
-    steps:
-      - attach_workspace:
-          at: '.'
-      - run: |
-          ghr \
-            -t ${GITHUB_TOKEN} \
-            -u ${CIRCLE_PROJECT_USERNAME} \
-            -r ${CIRCLE_PROJECT_REPONAME} \
-            -c ${CIRCLE_SHA1} \
-            -delete \
-            ${CIRCLE_TAG} \
-            ./release/
-
 workflows:
   version: 2
   test-generate-train:
     jobs:
+      - setup-darknet
+      - test-gen
       - test:
-          filters:
-            tags:
-              only: /.*/
-      - nas-gen: &gen-job
+          requires:
+            - setup-darknet
+            - test-gen
+      - part-a-gen: &gen-job
           requires:
             - test
           filters: &release-filters
@@ -150,48 +235,29 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
-      - circle-gen:
+      - part-b-gen:
           <<: *gen-job
-      - cross-gen:
+      - part-c-gen:
           <<: *gen-job
-      - pentagon-gen:
+      - part-d-gen:
           <<: *gen-job
-      - quarter-circle-gen:
-          <<: *gen-job
-      - rectangle-gen:
-          <<: *gen-job
-      - semicircle-gen:
-          <<: *gen-job
-      - square-gen:
-          <<: *gen-job
-      - star-gen:
-          <<: *gen-job
-      - trapezoid-gen:
-          <<: *gen-job
-      - triangle-gen:
-          <<: *gen-job
-      - train:
+      - merge-data:
           requires:
-            - nas-gen
-            - circle-gen
-            - cross-gen
-            - pentagon-gen
-            - quarter-circle-gen
-            - rectangle-gen
-            - semicircle-gen
-            - square-gen
-            - star-gen
-            - trapezoid-gen
-            - triangle-gen
+            - part-a-gen
+            - part-b-gen
+            - part-c-gen
+            - part-d-gen
+      - train: &train-job
+          requires:
+            - merge-data
+            - setup-darknet
           filters:
             <<: *release-filters
+      - train-clf:
+          <<: *train-job
       - release:
           requires:
             - train
-          filters:
-            <<: *release-filters
-      - publish:
-          requires:
-            - release
+            - train-clf
           filters:
             <<: *release-filters

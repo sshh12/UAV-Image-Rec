@@ -14,7 +14,6 @@ def pull_all():
     """Pull all assets."""
     pull_backgrounds()
     pull_base_shapes()
-    pull_nas_images()
 
 
 def pull_backgrounds():
@@ -25,11 +24,6 @@ def pull_backgrounds():
 def pull_base_shapes():
     """Pull the base shape images."""
     _pull_asset(config.BASE_SHAPES_URL)
-
-
-def pull_nas_images():
-    """Pull the images to generate not-a-shapes."""
-    _pull_asset(config.NAS_IMAGES_URL)
 
 
 # Fetch and extract a file from a URL.
