@@ -13,11 +13,10 @@ not necessarily correspond to a target-finder version.*
 ### Install
 1. Download `git clone --recurse-submodules https://github.com/uavaustin/target-finder-model`
 2. Get Darknet (requires Linux or [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10))
-    * `cd target-finder-model && git clone https://github.com/AlexeyAB/darknet.git`
-    * `cd darknet` and edit `MakeFile`
+    * `cd target-finder-model/darknet` and edit `MakeFile`
         * If CPU `AVX=1` `OPENMP=1` `LIBSO=1`
         * If GPU `GPU=1` `CUDNN=1` `LIBSO=1`
-        * `make`
+        * Run `make`
 
 ### Generate
 * `python generate/pull_assets.py` Download base shapes and background images
