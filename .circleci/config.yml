@@ -152,7 +152,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: '..'
-      - run: git clone https://github.com/AlexeyAB/darknet.git
+      - run: git submodule init
       - run: make -C ./darknet
       - persist_to_workspace:
           root: 'darknet'
