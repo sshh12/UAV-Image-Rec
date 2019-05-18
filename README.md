@@ -11,7 +11,7 @@ not necessarily correspond to a target-finder version.*
 ## Developer Instructions
 
 ### Install
-1. Download `git clone https://github.com/uavaustin/target-finder-model`
+1. Download `git clone --recurse-submodules https://github.com/uavaustin/target-finder-model`
 2. Get Darknet (requires Linux or [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10))
     * `cd target-finder-model && git clone https://github.com/AlexeyAB/darknet.git`
     * `cd darknet` and edit `MakeFile`
